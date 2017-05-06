@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="utf-8">
+  
+  <title>Adaboost | 研读小屋</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Adaboost算法boost的思想是组合一堆弱分类器来组成一个强分类器，Adaboost便是其中一个最著名的例子。Adaboost的推导可以由以下式子来完成：首先Adaboost是一堆弱分类器的组合，可以写为$f_m(x) = \frac{1}{2}\sum_{j}^m\alpha_jy_j(x)$，它的损失函数采用loss损失函数，所以最终可以写为：$$L(x) = \sum_i^n\exp(">
+<meta name="keywords" content="MachineLearning">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Adaboost">
+<meta property="og:url" content="http://yoursite.com/2017/05/06/adaboost/index.html">
+<meta property="og:site_name" content="研读小屋">
+<meta property="og:description" content="Adaboost算法boost的思想是组合一堆弱分类器来组成一个强分类器，Adaboost便是其中一个最著名的例子。Adaboost的推导可以由以下式子来完成：首先Adaboost是一堆弱分类器的组合，可以写为$f_m(x) = \frac{1}{2}\sum_{j}^m\alpha_jy_j(x)$，它的损失函数采用loss损失函数，所以最终可以写为：$$L(x) = \sum_i^n\exp(">
+<meta property="og:image" content="http://yoursite.com/images/adaboost_decision_boundary.png">
+<meta property="og:updated_time" content="2017-05-06T06:54:50.516Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Adaboost">
+<meta name="twitter:description" content="Adaboost算法boost的思想是组合一堆弱分类器来组成一个强分类器，Adaboost便是其中一个最著名的例子。Adaboost的推导可以由以下式子来完成：首先Adaboost是一堆弱分类器的组合，可以写为$f_m(x) = \frac{1}{2}\sum_{j}^m\alpha_jy_j(x)$，它的损失函数采用loss损失函数，所以最终可以写为：$$L(x) = \sum_i^n\exp(">
+<meta name="twitter:image" content="http://yoursite.com/images/adaboost_decision_boundary.png">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <link rel="stylesheet" href="/css/style.css">
+  
+    <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  
+  
+    <link rel="stylesheet" href="/scrollLoading/style.css">
+  
+  
+
+
+  
+
+  
+    <link href='//fonts.useso.com/css?family=Titillium+Web:300,400,600' rel='stylesheet' type='text/css'>
+    <link href="//fonts.useso.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css"><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+</head>
+
+<body>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div id="wrap">
+    <header id="header">
+  <div id="header-outer" class="outer">
+    <div class="container">
+      <div class="container-inner">
+        <div id="header-title">
+          <h1 class="logo-wrap">
+            <a href="/" class="logo"></a>
+          </h1>
+          
+            <h2 class="subtitle-wrap">
+              <p class="subtitle">君子食无求饱，居无求安，敏于事而慎于言</p>
+            </h2>
+          
+        </div>
+        <div id="header-inner" class="nav-container">
+          <a id="main-nav-toggle" class="nav-icon fa fa-bars"></a>
+          <div class="nav-container-inner">
+            <ul id="main-nav">
+              
+                <li class="main-nav-list-item" ><a class="main-nav-list-link" href="/">主页</a></li>
+              
+                    <ul class="main-nav-list"><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/技术/">技术</a></li></ul>
+                  
+                <li class="main-nav-list-item" ><a class="main-nav-list-link" href="/2015/10/25/about">关于</a></li>
+              
+            </ul>
+            <nav id="sub-nav">
+              <div id="search-form-wrap">
+                
+                  <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="搜索"><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+                
+              </div>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+    <div class="container">
+      <div class="main-body container-inner">
+        <div class="main-body-inner">
+          <section id="main">
+            <div class="main-body-header">
+
+              <h1 class="header"><a class="page-title-link" href="/categories/技术/">技术</a></h1>
+            </div>
+            <div class="main-body-content">
+              
+  <article id="post-adaboost" class="article article-single article-type-post" itemscope itemprop="blogPost">
+    <div class="article-inner">
+      <!--  -->
+      
+        <header class="article-header">
+          
+  
+    <h1 class="article-title" itemprop="name">
+      Adaboost
+    </h1>
+  
+
+        </header>
+      
+      <p class="article-byline">
+        <a href="/2017/05/06/adaboost/" class="article-date">
+  <time datetime="2017-05-06T03:25:23.000Z" itemprop="datePublished">2017-05-06</time>
+</a>
+      </p>
+      <div class="article-entry" itemprop="articleBody">
+        <h1 id="Adaboost算法"><a href="#Adaboost算法" class="headerlink" title="Adaboost算法"></a>Adaboost算法</h1><p>boost的思想是组合一堆弱分类器来组成一个强分类器，Adaboost便是其中一个最著名的例子。<br>Adaboost的推导可以由以下式子来完成：首先Adaboost是一堆弱分类器的组合，可以写为$f_m(x) = \frac{1}{2}\sum_{j}^m\alpha_jy_j(x)$，它的损失函数采用loss损失函数，所以最终可以写为：<br>$$L(x) = \sum_i^n\exp(-t_if_m(x_i)) = \sum_{i}^n\exp(-t_i\frac{1}{2}\sum_{j}^m\alpha_jy_j(x_i))$$</p>
+<p>其中$x_i$为训练数据， $t_i$为label，$t_i \in {+1, -1}$</p>
+<p>现在我们假设前$m - 1$分类器已经训练好了。现在要训练第$m$个分类器，损失函数可以化为如下形式：<br>$$L(x) = \sum_{i}^n\exp(-t_i\frac{1}{2}\alpha_my_m(x_i))\exp(-t_if_{m-1}(x_i))$$</p>
+<p>后面一项是已经固定了训练好的分类器，我们设为$w_{i}^m = \exp(-t_if_{m-1}(x_i))$。所以损失函数为<br>$$L(x) = \sum_{i}^nw_i^m\exp(-\frac{1}{2}t_i\alpha_my_m(x_i))$$</p>
+<p>对于那些$y_m(x)$分对的数据$x_i \in C(x)$， 有$t_iy_m(x_i) = 1$。对于那些分错的数据$x_i \in W(x)$，有$t_iy_m(x_i) = -1$，所以损失函数可以写成如下形式：<br>$$L(x) = \sum_{i \in C(x)}w_i^me^{-\frac{\alpha_m}{2}} + \sum_{i \in W(x)}w_i^me^{\frac{\alpha_m}{2}}$$</p>
+<p>现在为了将形式统一起来，并且想到要写成loss形式$I(y_m(x_i), t_i)$, 所以我们添加一项$\sum_{i \in W(x)}w_i^me^{-\frac{\alpha_m}{2}}$。前面加上这项，后面减去这项，$L$就可以写为<br>$$L(x) = (e^{\frac{\alpha_m}{2}} - e^{-\frac{\alpha_m}{2}})\sum_{i=1}^nw_i^mI(t_i \neq y_m(x_i)) + \sum_{i=1}^nw_i^me^{-\frac{\alpha_m}{2}}$$</p>
+<p>在优化$y_m(x)$的时候，与后一项无关，只与$\sum_iw_i^mI(t_i \neq y_m(x_i))$有关，所以训练分类器以这个指标为基础。</p>
+<p>对于$\alpha_m$的更新，可以对$L(x)$求导即可。<br>$$\frac{\partial L}{\partial \alpha_m} = (\frac{1}{2}e^{\frac{\alpha_m}{2}} + \frac{1}{2}e^{-\frac{\alpha_m}{2}})\sum_{i=1}^nw_i^mI(t_i\neq y_m(x_i)) - \frac{1}{2}\sum_{i=1}^nw_i^me^{-\frac{\alpha_m}{2}}$$</p>
+<p>令梯度为0，我们可以得到如下方程：<br>$$e^{\frac{\alpha_m}{2}}\sum_{i=1}^nw_i^mI(t_i\neq y_m(x_i)) = e^{-\frac{\alpha_m}{2}}(\sum_{i=1}^nw_i^m-\sum_{i=1}^nw_i^mI(t_i\neq y_m(x_i)))$$</p>
+<p>两边同除$\sum_{i=1}^nw_i^m$，并令$\epsilon_m = \frac{\sum_{i=1}^nw_i^mI(t_i \neq y_m(x_i))}{\sum_{i=1}^nw_i^m}$，得到<br>$$e^{\frac{\alpha_m}{2}}\epsilon_m = e^{-\frac{\alpha_m}{2}}(1 - \epsilon_m)$$</p>
+<p>求解得到$$\alpha_m = \ln \frac{1 - \epsilon_m}{\epsilon_m}$$</p>
+<p>现在$w_i^{m + 1} = \exp(-t_if_{m}(x_i)) = \exp(-t_if_{m-1}(x_i))\exp(-\frac{1}{2}t_i\alpha_my_m(x_i)) = w_i^m\exp(-\frac{1}{2}t_i\alpha_my_m(x_i))$</p>
+<p>然后利用$t_iy_m(x_i) = 1 - 2I(t_i \neq y_m(x_i))$<br>所以$w_i^{m+1} = w_i^m\exp(-\frac{\alpha_m}{2})\exp(\alpha_mI(t_i \neq y_m(x_i)))$</p>
+<p>根据以上式子，我们采用分类器为简单的决策树分类器，即只有一个节点的决策树。代码如下：</p>
+<p><a href="https://github.com/xcszbdnl/MachineLearning/blob/master/Adaboost/adaboost.py" target="_blank" rel="external">Adaboost</a></p>
+<p>做一个二维决策面如下图所示：<img src="/images/adaboost_decision_boundary.png" alt="DecisionBoundary"></p>
+<p>Adaboost的优缺点：<br>优点：泛化错误率低，易编码，可以应用在大部分分类器上，无参数调整。<br>缺点：对离群点敏感。<br>适用数据类型：数值型和标称型数据。</p>
+
+      </div>
+      <footer class="article-footer">
+        <a data-url="http://yoursite.com/2017/05/06/adaboost/" data-id="cj2cx0u6a00043cw8w7519af1" class="article-share-link"><i class="fa fa-share"></i>分享到</a>
+        
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MachineLearning/">MachineLearning</a></li></ul>
+
+      </footer>
+    </div>
+  </article>
+  
+  
+
+            </div>
+          </section>
+          <aside id="sidebar">
+  <a class="sidebar-toggle" title="Expand Sidebar"><i class="toggle icon"></i></a>
+  <div class="sidebar-top">
+    <p>关注我 :</p>
+    <ul class="social-links">
+      
+        <li><a class="social-tooltip" title="twitter" href="/" target="_blank"><i class="icon fa fa-twitter"></i></a></li>
+      
+        <li><a class="social-tooltip" title="facebook" href="/" target="_blank"><i class="icon fa fa-facebook"></i></a></li>
+      
+        <li><a class="social-tooltip" title="github" href="https://github.com/xcszbdnl" target="_blank"><i class="icon fa fa-github"></i></a></li>
+      
+        <li><a class="social-tooltip" title="weibo" href="/" target="_blank"><i class="icon fa fa-weibo"></i></a></li>
+      
+    </ul>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2017/03/07/svm/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">上一篇</strong>
+      <p class="article-nav-title">svm</p>
+      <i class="icon fa fa-chevron-left" id="icon-chevron-left"></i>
+    </a>
+  
+</nav>
+
+  
+  <div class="widgets-container">
+    
+      
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul id="recent-post" class="">
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2017/05/06/adaboost/" class="thumbnail">
+  
+    <span style="background-image:url(/images/adaboost_decision_boundary.png
+)" alt="Adaboost" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2017/05/06/adaboost/" class="title">Adaboost</a></p>
+              <p class="item-date"><time datetime="2017-05-06T03:25:23.000Z" itemprop="datePublished">2017-05-06</time></p>
+            </div>
+          </li>
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2017/03/07/svm/" class="thumbnail">
+  
+    <span style="background-image:url(/images/svm_1.png
+)" alt="svm" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2017/03/07/svm/" class="title">svm</a></p>
+              <p class="item-date"><time datetime="2017-03-07T14:51:33.000Z" itemprop="datePublished">2017-03-07</time></p>
+            </div>
+          </li>
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2016/12/20/sampling-method/" class="thumbnail">
+  
+    <span style="background-image:url(/images/rejection_sampling.png
+)" alt="采样方法" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2016/12/20/sampling-method/" class="title">采样方法</a></p>
+              <p class="item-date"><time datetime="2016-12-20T13:31:55.000Z" itemprop="datePublished">2016-12-20</time></p>
+            </div>
+          </li>
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2016/12/20/decision-tree/" class="thumbnail">
+  
+    <span style="background-image:url(/images/decision_tree.png
+)" alt="决策树" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2016/12/20/decision-tree/" class="title">决策树</a></p>
+              <p class="item-date"><time datetime="2016-12-20T13:02:39.000Z" itemprop="datePublished">2016-12-20</time></p>
+            </div>
+          </li>
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2016/10/24/kd-tree/" class="thumbnail">
+  
+    <span style="background-image:url(/images/k_nearest.png
+)" alt="K近邻" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2016/10/24/kd-tree/" class="title">K近邻</a></p>
+              <p class="item-date"><time datetime="2016-10-24T13:40:44.000Z" itemprop="datePublished">2016-10-24</time></p>
+            </div>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget-wrap widget-list">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/技术/">技术</a><span class="category-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap widget-list">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/03/">三月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/10/">十月 2015</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap widget-list">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cluster/">Cluster</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/DeepLearning/">DeepLearning</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MachineLearning/">MachineLearning</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Sampling/">Sampling</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Sparsity/">Sparsity</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap widget-float">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Cluster/" style="font-size: 10px;">Cluster</a> <a href="/tags/DeepLearning/" style="font-size: 15px;">DeepLearning</a> <a href="/tags/MachineLearning/" style="font-size: 20px;">MachineLearning</a> <a href="/tags/Sampling/" style="font-size: 10px;">Sampling</a> <a href="/tags/Sparsity/" style="font-size: 10px;">Sparsity</a>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap widget-list">
+    <h3 class="widget-title">链接</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="http://hexo.io">Hexo</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+
+    
+  </div>
+</aside>
+        </div>
+      </div>
+    </div>
+    <footer id="footer">
+  
+  <div class="container">
+    <div class="container-inner">
+      <a id="back-to-top" href="javascript:;"><i class="icon fa fa-angle-up"></i></a>
+      <div class="credit">
+        <h1 class="logo-wrap">
+          <a href="/" class="logo"></a>
+        </h1>
+        <p>&copy; 2017 ChangshengXiang</p>
+        <p>Powered by <a href="//hexo.io/" target="_blank">Hexo</a>. Theme by <a href="//github.com/ppoffice" target="_blank">PPOffice</a></p>
+      </div>
+    </div>
+  </div>
+</footer>
+    
+
+
+  <script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
+
+
+
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+  <script src="/scrollLoading/jquery.scrollLoading.js"></script>
+  <script src="/scrollLoading/main.js"></script>
+
+
+
+
+<script src="/js/html-patch.js"></script>
+<script src="/js/script.js"></script>
+
+  </div><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({"tex2jax":{"inlineMath":[["$","$"],["\\(","\\)"]],"skipTags":["script","noscript","style","textarea","pre","code"],"processEscapes":true},"TeX":{"equationNumbers":{"autoNumber":"AMS"}}});
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
+</body>
+</html>

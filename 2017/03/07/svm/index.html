@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="utf-8">
+  
+  <title>svm | 研读小屋</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="SVMLagrange对偶问题首先一个约束问题$$\begin{cases}\min \ f(x) \\ s.t.\ \ g_i(x) \ge 0\\ \quad \quad h_j(x) = 0\end{cases}$$ 该问题可以转化成为等价的问题，引入拉格朗日函数$$L(x, w, v) = f(x) - \sum_iw_ig_i(x) - \sum_jv_jh_j(x),w_i \ge 0">
+<meta name="keywords" content="MachineLearning">
+<meta property="og:type" content="article">
+<meta property="og:title" content="svm">
+<meta property="og:url" content="http://yoursite.com/2017/03/07/svm/index.html">
+<meta property="og:site_name" content="研读小屋">
+<meta property="og:description" content="SVMLagrange对偶问题首先一个约束问题$$\begin{cases}\min \ f(x) \\ s.t.\ \ g_i(x) \ge 0\\ \quad \quad h_j(x) = 0\end{cases}$$ 该问题可以转化成为等价的问题，引入拉格朗日函数$$L(x, w, v) = f(x) - \sum_iw_ig_i(x) - \sum_jv_jh_j(x),w_i \ge 0">
+<meta property="og:image" content="http://yoursite.com/images/svm_1.png">
+<meta property="og:image" content="http://yoursite.com/images/svm_2.png">
+<meta property="og:updated_time" content="2017-05-06T06:52:22.533Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="svm">
+<meta name="twitter:description" content="SVMLagrange对偶问题首先一个约束问题$$\begin{cases}\min \ f(x) \\ s.t.\ \ g_i(x) \ge 0\\ \quad \quad h_j(x) = 0\end{cases}$$ 该问题可以转化成为等价的问题，引入拉格朗日函数$$L(x, w, v) = f(x) - \sum_iw_ig_i(x) - \sum_jv_jh_j(x),w_i \ge 0">
+<meta name="twitter:image" content="http://yoursite.com/images/svm_1.png">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <link rel="stylesheet" href="/css/style.css">
+  
+    <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  
+  
+    <link rel="stylesheet" href="/scrollLoading/style.css">
+  
+  
+
+
+  
+
+  
+    <link href='//fonts.useso.com/css?family=Titillium+Web:300,400,600' rel='stylesheet' type='text/css'>
+    <link href="//fonts.useso.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css"><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+</head>
+
+<body>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div id="wrap">
+    <header id="header">
+  <div id="header-outer" class="outer">
+    <div class="container">
+      <div class="container-inner">
+        <div id="header-title">
+          <h1 class="logo-wrap">
+            <a href="/" class="logo"></a>
+          </h1>
+          
+            <h2 class="subtitle-wrap">
+              <p class="subtitle">君子食无求饱，居无求安，敏于事而慎于言</p>
+            </h2>
+          
+        </div>
+        <div id="header-inner" class="nav-container">
+          <a id="main-nav-toggle" class="nav-icon fa fa-bars"></a>
+          <div class="nav-container-inner">
+            <ul id="main-nav">
+              
+                <li class="main-nav-list-item" ><a class="main-nav-list-link" href="/">主页</a></li>
+              
+                    <ul class="main-nav-list"><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/技术/">技术</a></li></ul>
+                  
+                <li class="main-nav-list-item" ><a class="main-nav-list-link" href="/2015/10/25/about">关于</a></li>
+              
+            </ul>
+            <nav id="sub-nav">
+              <div id="search-form-wrap">
+                
+                  <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="搜索"><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+                
+              </div>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+    <div class="container">
+      <div class="main-body container-inner">
+        <div class="main-body-inner">
+          <section id="main">
+            <div class="main-body-header">
+
+              <h1 class="header"><a class="page-title-link" href="/categories/技术/">技术</a></h1>
+            </div>
+            <div class="main-body-content">
+              
+  <article id="post-svm" class="article article-single article-type-post" itemscope itemprop="blogPost">
+    <div class="article-inner">
+      <!--  -->
+      
+        <header class="article-header">
+          
+  
+    <h1 class="article-title" itemprop="name">
+      svm
+    </h1>
+  
+
+        </header>
+      
+      <p class="article-byline">
+        <a href="/2017/03/07/svm/" class="article-date">
+  <time datetime="2017-03-07T14:51:33.000Z" itemprop="datePublished">2017-03-07</time>
+</a>
+      </p>
+      <div class="article-entry" itemprop="articleBody">
+        <h1 id="SVM"><a href="#SVM" class="headerlink" title="SVM"></a>SVM</h1><h4 id="Lagrange对偶问题"><a href="#Lagrange对偶问题" class="headerlink" title="Lagrange对偶问题"></a>Lagrange对偶问题</h4><p>首先一个约束问题<br>$$\begin{cases}\min \ f(x) \\ s.t.\ \ g_i(x) \ge 0\\ \quad \quad h_j(x) = 0\end{cases}$$</p>
+<p>该问题可以转化成为等价的问题，引入拉格朗日函数$$L(x, w, v) = f(x) - \sum_iw_ig_i(x) - \sum_jv_jh_j(x),w_i \ge 0$$<br>等价问题为<br>$$\mathop{\min}_{x}\mathop{\max}_{w,v}L(x,w,v)$$</p>
+<p>因为对于$L(x,w,v)$如果有某个$x$不满足特定的约束，如$g_k(x) &lt; 0$或者$h_k(x) \neq 0$,那么$\mathop{\max}_{w,v}L(x,w,v) = +\infty$,所以满足约束的时候$\max L(x,w,v) = f(x)$<br>所以原问题等价于<br>$$\mathop{\min}_{x}\mathop{\max}_{w,v}L(x,w,v)$$</p>
+<p>另外该问题有对应的对偶问题，对偶问题为<br>$$\mathop{\max_{w,v}}\mathop{\min}_{x}L(x,w,v)$$</p>
+<p>对偶问题的上界是原问题的下界。<br>证明如下：对于$w_i\ge 0, g_i \ge 0,h_j(x) = 0$,说明对任意的$v$和$w_i\ge0$都有下式成立<br>$$\mathop{\min}_{x}L(x,w,v) \le f(x)$$</p>
+<p>那么就有$$\mathop{\max}_{w,v}\mathop{\min}_{x}L(x,w,v,) \le \mathop{\min}_{x}f(x) = \mathop{\min}_{x}\mathop{\max}_{w,v}L(x,w,v)$$</p>
+<p>上面称为Lagrange对偶问题</p>
+<p>对于SVM来说<br>SVM特有的性质：sparse solutions。<br>也就是对于原来的核方法，我们不需要计算每个$k(x_n,x_m)$，而只是需要计算少量的核就可以了。<br>另外SVM是一个凸优化问题，也就是说任何一个找到的局部极值都是全局极值。证明方法是采用一阶充分条件去证。(也可看做是一个二次规划问题？)</p>
+<p>SVM推导如下，首先核心思想是max-margin，也就是最大化分离面间距。决策函数为$$y(x) = w^T\phi(x) + b$$<br>对于$y(x) \ge 0$分为正例$t = +1$，对于$y(x) &lt; 0$，分为负例$t= -1$。所以对于可分数据集来说，最终的所有数据都满足$ty(x) \ge 0$<br>对于数据$x_i$来说，到分离面的距离为$$d_i = \frac{|w^T\phi(x_i) + b|}{||w||_2} = \frac{t_i(w^T\phi(x_i) + b)}{||w||_2}$$</p>
+<p>所以目标函数为$$L = \mathop{\max}_{w}(\mathop{\min}_i \frac{t_i(w^T\phi(x_i) +b)}{||w||_2})$$</p>
+<p>又因为$w = kw, b = kb$，不影响最终的分离面，所以我们可以令$\mathop{min}_{i}\frac{t_i(w^T\phi(x_i) +b)}{||w||_2} = 1$，然后对于$$\mathop{max}_{w}\frac{1}{||w||_2} = \frac{1}{2}\mathop{min}_{w}||w||_2^2$$<br>所以最终的L可以转化成为以下问题<br>$$\begin{cases}\min\quad  \frac{1}{2}||w||_2^2 \\ s.t. \quad t_i(w^T\phi(x_i) + b) \ge 1 (1 \le i \le n)\end{cases}$$</p>
+<p>对于有约束的极大化问题，我们对每个约束引入拉格朗日乘子$\alpha_i$，原问题转化为如下问题$$L(w, \alpha) = \frac{1}{2}||w||_2^2 - \sum_{i}\alpha_i(t_i(w^T\phi(x_i) + b) - 1),\alpha_i \ge 0$$</p>
+<p>对$w,b$求偏导并令其等于0，得到<br>$$\frac{\partial L}{\partial w} = w - \sum_{i}\alpha_it_i\phi(x_i) = 0 \Rightarrow w = \sum_{i}\alpha_it_i\phi(x_i)$$</p>
+<p>$$\frac{\partial L}{\partial b} = \sum_{i}\alpha_it_i = 0$$</p>
+<p>将$w, b$代回原式，得到$$L(\alpha) = \sum_i\alpha_i - \frac{1}{2}\sum_{i}\sum_{j}\alpha_i\alpha_jt_it_j\phi(x_i)\phi(x_j)$$<br>所以原问题转化为如下二次规划问题<br>$$\begin{cases}\mathop{max}_{\alpha}\quad \sum_i\alpha_i - \frac{1}{2}\sum_{i}\sum_{j}\alpha_i\alpha_jt_it_j\phi(x_i)\phi(x_j) \\ s.t. \quad \alpha_i \ge 0 (1 \le i \le n)\\ \quad\quad\ \sum_{i}\alpha_it_i = 0\end{cases}$$</p>
+<p>这是对于数据是线性可分的情况，如果数据线性不可分，则对每一个约束项引入一个引子$\xi_i$，原来的问题转化为以下问题：<br>$$\begin{cases}\min\quad  \frac{1}{2}||w||_2^2 + C\sum_{i}\xi_i\\ s.t. \quad t_i(w^T\phi(x_i) + b) \ge 1 - \xi_i \quad (1 \le i \le n) \\ \quad\quad\quad \xi_i \ge 0\quad (1 \le i \le n)\end{cases}<br>$$</p>
+<p>同理引入拉格朗日乘子，因为有两个约束项，所以引入$\alpha_i, \mu_i$，原问题转化为<br>$$L(w, b, \xi, \alpha, \mu) = \frac{1}{2}||w||_2^2 + C\sum_{i}\xi_i - \sum_{i}\alpha_i(t_i(w^T\phi(x_i) +b ) - 1 + \xi_i) - \sum_{i}\mu_i\xi_i$$</p>
+<p>同理对$w, b, \xi_i$求导，并代入原式，得到如下二次规划问题<br>$$\begin{cases}\mathop{max}_{\alpha}\quad \sum_i\alpha_i - \frac{1}{2}\sum_{i}\sum_{j}\alpha_i\alpha_jt_it_j\phi(x_i)\phi(x_j) \\ s.t. \quad C \ge \alpha_i \ge 0 (1 \le i \le n)\\ \quad\quad\ \sum_{i}\alpha_it_i = 0\end{cases}$$</p>
+<p>解决上述二次规划问题中实用的是SMO算法。思想是每次选两次$\alpha_i, \alpha_j$进行迭代。将整个问题转化为一个变量的二次函数问题，直接有最大最小值可解。</p>
+<p>实现代码如下：<a href="https://github.com/xcszbdnl/MachineLearning/blob/master/SVM/SVM.py" target="_blank" rel="external">SVM</a></p>
+<p>效果图：对于可分数据集<br><img src="/images/svm_1.png" alt="svm_separable"></p>
+<p>对于不可分数据集<br><img src="/images/svm_2.png" alt="svm_unseparable"></p>
+<p>对于该代码有几个问题(主要参考了机器学习实战的写法)<br>1: 在初始选择j的时候如果返回的e_j有问题<br>2: 为什么要对E进行缓存<br>3: 对于一些线性可分的数据集最后画线的结果有问题 （待解决）</p>
+
+      </div>
+      <footer class="article-footer">
+        <a data-url="http://yoursite.com/2017/03/07/svm/" data-id="cj2cx0u7j000o3cw8dp7793fa" class="article-share-link"><i class="fa fa-share"></i>分享到</a>
+        
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MachineLearning/">MachineLearning</a></li></ul>
+
+      </footer>
+    </div>
+  </article>
+  
+  
+
+            </div>
+          </section>
+          <aside id="sidebar">
+  <a class="sidebar-toggle" title="Expand Sidebar"><i class="toggle icon"></i></a>
+  <div class="sidebar-top">
+    <p>关注我 :</p>
+    <ul class="social-links">
+      
+        <li><a class="social-tooltip" title="twitter" href="/" target="_blank"><i class="icon fa fa-twitter"></i></a></li>
+      
+        <li><a class="social-tooltip" title="facebook" href="/" target="_blank"><i class="icon fa fa-facebook"></i></a></li>
+      
+        <li><a class="social-tooltip" title="github" href="https://github.com/xcszbdnl" target="_blank"><i class="icon fa fa-github"></i></a></li>
+      
+        <li><a class="social-tooltip" title="weibo" href="/" target="_blank"><i class="icon fa fa-weibo"></i></a></li>
+      
+    </ul>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2017/05/06/adaboost/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <p class="article-nav-title">
+        
+          Adaboost
+        
+      </p>
+      <i class="icon fa fa-chevron-right" id="icon-chevron-right"></i>
+    </a>
+  
+  
+    <a href="/2016/12/20/sampling-method/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">上一篇</strong>
+      <p class="article-nav-title">采样方法</p>
+      <i class="icon fa fa-chevron-left" id="icon-chevron-left"></i>
+    </a>
+  
+</nav>
+
+  
+  <div class="widgets-container">
+    
+      
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul id="recent-post" class="">
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2017/05/06/adaboost/" class="thumbnail">
+  
+    <span style="background-image:url(/images/adaboost_decision_boundary.png
+)" alt="Adaboost" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2017/05/06/adaboost/" class="title">Adaboost</a></p>
+              <p class="item-date"><time datetime="2017-05-06T03:25:23.000Z" itemprop="datePublished">2017-05-06</time></p>
+            </div>
+          </li>
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2017/03/07/svm/" class="thumbnail">
+  
+    <span style="background-image:url(/images/svm_1.png
+)" alt="svm" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2017/03/07/svm/" class="title">svm</a></p>
+              <p class="item-date"><time datetime="2017-03-07T14:51:33.000Z" itemprop="datePublished">2017-03-07</time></p>
+            </div>
+          </li>
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2016/12/20/sampling-method/" class="thumbnail">
+  
+    <span style="background-image:url(/images/rejection_sampling.png
+)" alt="采样方法" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2016/12/20/sampling-method/" class="title">采样方法</a></p>
+              <p class="item-date"><time datetime="2016-12-20T13:31:55.000Z" itemprop="datePublished">2016-12-20</time></p>
+            </div>
+          </li>
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2016/12/20/decision-tree/" class="thumbnail">
+  
+    <span style="background-image:url(/images/decision_tree.png
+)" alt="决策树" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2016/12/20/decision-tree/" class="title">决策树</a></p>
+              <p class="item-date"><time datetime="2016-12-20T13:02:39.000Z" itemprop="datePublished">2016-12-20</time></p>
+            </div>
+          </li>
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2016/10/24/kd-tree/" class="thumbnail">
+  
+    <span style="background-image:url(/images/k_nearest.png
+)" alt="K近邻" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2016/10/24/kd-tree/" class="title">K近邻</a></p>
+              <p class="item-date"><time datetime="2016-10-24T13:40:44.000Z" itemprop="datePublished">2016-10-24</time></p>
+            </div>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget-wrap widget-list">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/技术/">技术</a><span class="category-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap widget-list">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/03/">三月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/10/">十月 2015</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap widget-list">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cluster/">Cluster</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/DeepLearning/">DeepLearning</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MachineLearning/">MachineLearning</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Sampling/">Sampling</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Sparsity/">Sparsity</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap widget-float">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Cluster/" style="font-size: 10px;">Cluster</a> <a href="/tags/DeepLearning/" style="font-size: 15px;">DeepLearning</a> <a href="/tags/MachineLearning/" style="font-size: 20px;">MachineLearning</a> <a href="/tags/Sampling/" style="font-size: 10px;">Sampling</a> <a href="/tags/Sparsity/" style="font-size: 10px;">Sparsity</a>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap widget-list">
+    <h3 class="widget-title">链接</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="http://hexo.io">Hexo</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+
+    
+  </div>
+</aside>
+        </div>
+      </div>
+    </div>
+    <footer id="footer">
+  
+  <div class="container">
+    <div class="container-inner">
+      <a id="back-to-top" href="javascript:;"><i class="icon fa fa-angle-up"></i></a>
+      <div class="credit">
+        <h1 class="logo-wrap">
+          <a href="/" class="logo"></a>
+        </h1>
+        <p>&copy; 2017 ChangshengXiang</p>
+        <p>Powered by <a href="//hexo.io/" target="_blank">Hexo</a>. Theme by <a href="//github.com/ppoffice" target="_blank">PPOffice</a></p>
+      </div>
+    </div>
+  </div>
+</footer>
+    
+
+
+  <script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
+
+
+
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+  <script src="/scrollLoading/jquery.scrollLoading.js"></script>
+  <script src="/scrollLoading/main.js"></script>
+
+
+
+
+<script src="/js/html-patch.js"></script>
+<script src="/js/script.js"></script>
+
+  </div><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({"tex2jax":{"inlineMath":[["$","$"],["\\(","\\)"]],"skipTags":["script","noscript","style","textarea","pre","code"],"processEscapes":true},"TeX":{"equationNumbers":{"autoNumber":"AMS"}}});
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
+</body>
+</html>

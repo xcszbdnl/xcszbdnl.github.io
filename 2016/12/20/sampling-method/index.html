@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="utf-8">
+  
+  <title>采样方法 | 研读小屋</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="对一些常用的采用进行总结，主要参考了PRML。 整个采样的关键思想：求$$E[f] = \int f(z)p(z)dz$$ 但是通常数值分析的方法很难求，寻求一种近似的方法$$E[f] = \frac{1}{L}\sum f(z^{(l)})$$ 其中$z^{(l)} \sim P(z)$，通常来说10~20个样本就可以很好的拟合，并且这个方法是不取决于z的维度的。 但是通常情况下，可能一些非常小">
+<meta name="keywords" content="Sampling">
+<meta property="og:type" content="article">
+<meta property="og:title" content="采样方法">
+<meta property="og:url" content="http://yoursite.com/2016/12/20/sampling-method/index.html">
+<meta property="og:site_name" content="研读小屋">
+<meta property="og:description" content="对一些常用的采用进行总结，主要参考了PRML。 整个采样的关键思想：求$$E[f] = \int f(z)p(z)dz$$ 但是通常数值分析的方法很难求，寻求一种近似的方法$$E[f] = \frac{1}{L}\sum f(z^{(l)})$$ 其中$z^{(l)} \sim P(z)$，通常来说10~20个样本就可以很好的拟合，并且这个方法是不取决于z的维度的。 但是通常情况下，可能一些非常小">
+<meta property="og:image" content="http://yoursite.com/images/rejection_sampling.png">
+<meta property="og:image" content="http://yoursite.com/images/adaptive_rejection.png">
+<meta property="og:updated_time" content="2017-05-06T06:52:22.502Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="采样方法">
+<meta name="twitter:description" content="对一些常用的采用进行总结，主要参考了PRML。 整个采样的关键思想：求$$E[f] = \int f(z)p(z)dz$$ 但是通常数值分析的方法很难求，寻求一种近似的方法$$E[f] = \frac{1}{L}\sum f(z^{(l)})$$ 其中$z^{(l)} \sim P(z)$，通常来说10~20个样本就可以很好的拟合，并且这个方法是不取决于z的维度的。 但是通常情况下，可能一些非常小">
+<meta name="twitter:image" content="http://yoursite.com/images/rejection_sampling.png">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <link rel="stylesheet" href="/css/style.css">
+  
+    <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  
+  
+    <link rel="stylesheet" href="/scrollLoading/style.css">
+  
+  
+
+
+  
+
+  
+    <link href='//fonts.useso.com/css?family=Titillium+Web:300,400,600' rel='stylesheet' type='text/css'>
+    <link href="//fonts.useso.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css"><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+</head>
+
+<body>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div id="wrap">
+    <header id="header">
+  <div id="header-outer" class="outer">
+    <div class="container">
+      <div class="container-inner">
+        <div id="header-title">
+          <h1 class="logo-wrap">
+            <a href="/" class="logo"></a>
+          </h1>
+          
+            <h2 class="subtitle-wrap">
+              <p class="subtitle">君子食无求饱，居无求安，敏于事而慎于言</p>
+            </h2>
+          
+        </div>
+        <div id="header-inner" class="nav-container">
+          <a id="main-nav-toggle" class="nav-icon fa fa-bars"></a>
+          <div class="nav-container-inner">
+            <ul id="main-nav">
+              
+                <li class="main-nav-list-item" ><a class="main-nav-list-link" href="/">主页</a></li>
+              
+                    <ul class="main-nav-list"><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/技术/">技术</a></li></ul>
+                  
+                <li class="main-nav-list-item" ><a class="main-nav-list-link" href="/2015/10/25/about">关于</a></li>
+              
+            </ul>
+            <nav id="sub-nav">
+              <div id="search-form-wrap">
+                
+                  <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="搜索"><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+                
+              </div>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+    <div class="container">
+      <div class="main-body container-inner">
+        <div class="main-body-inner">
+          <section id="main">
+            <div class="main-body-header">
+
+              <h1 class="header"><a class="page-title-link" href="/categories/技术/">技术</a></h1>
+            </div>
+            <div class="main-body-content">
+              
+  <article id="post-sampling-method" class="article article-single article-type-post" itemscope itemprop="blogPost">
+    <div class="article-inner">
+      <!--  -->
+      
+        <header class="article-header">
+          
+  
+    <h1 class="article-title" itemprop="name">
+      采样方法
+    </h1>
+  
+
+        </header>
+      
+      <p class="article-byline">
+        <a href="/2016/12/20/sampling-method/" class="article-date">
+  <time datetime="2016-12-20T13:31:55.000Z" itemprop="datePublished">2016-12-20</time>
+</a>
+      </p>
+      <div class="article-entry" itemprop="articleBody">
+        <p>对一些常用的采用进行总结，主要参考了PRML。</p>
+<p>整个采样的关键思想：求<br>$$E[f] = \int f(z)p(z)dz$$</p>
+<p>但是通常数值分析的方法很难求，寻求一种近似的方法<br>$$E[f] = \frac{1}{L}\sum f(z^{(l)})$$</p>
+<p>其中$z^{(l)} \sim P(z)$，通常来说10~20个样本就可以很好的拟合，并且这个方法是不取决于z的维度的。</p>
+<p>但是通常情况下，可能一些非常小概率的$z$决定了$E[f]$，所以可能要求采样数要采的比较多</p>
+<p>对于有向图的采样，采用ancestral sampling。从父亲开始采样起。</p>
+<p>如果观察节点固定的话，使用一种叫做logic sampling的方法。也是从父亲开始采样起，最终采样到可见节点，如果不符合的话，丢弃。</p>
+<p>无向图的采样更加复杂，通常需要一些更复杂的采样方法，比如说吉布斯采样。</p>
+<p>对于采样联合分布的边缘采样$p(u,v)$，如果我们要采样$P(u)$，简单的把$v$丢弃即可。</p>
+<p>介绍一些常用的采样方法</p>
+<h4 id="Inverse-CDF"><a href="#Inverse-CDF" class="headerlink" title="Inverse CDF"></a>Inverse CDF</h4><p>最简单的采样，计算机只能生成一些伪随机数。在[0, 1]中均匀分布。现在假设计算机已经可以生成出[0,1]分布的样本$z$了，现在我们要从一个更复杂的分布$p(y)$中采出$y$，我们希望找到一个简单的映射<br>$y = f(z)$<br>$$p(y) = p(z)|\frac{dz}{dy}|$$<br>对于多元变量有<br>$$P(y_1,\cdots,y_m) =p(z_1,\cdots,z_m)\frac{\partial (z_1,\cdots,z_m)}{\partial (y_1,\cdots,y_m)}$$<br>Box-Muller变换<br>$z_1,z_2$从均匀分布中采样满足$z_1^2+z_2^2 \le 1$，那么有$p(z_1,z_2)=\frac{1}{\pi}$<br>接下来进行变换<br>$$y_1=z_1(\frac{-2\ln z_1}{r^2})$$</p>
+<p>$$y_2=z_2(\frac{-2\ln z_2}{r^2})$$</p>
+<p>现在$y_1,y_2$为均值为0，方差为1的独立高斯分布。<br>对于均值为$\mu$,方差为$\sigma$，使用$\sigma y + \mu$即可。如果是covariance  $\Sigma$，使用Cholesky decomposition,$\Sigma = LL^T$，然后$y = \mu + Lz$</p>
+<h4 id="Rejection-Sampling"><a href="#Rejection-Sampling" class="headerlink" title="Rejection Sampling"></a>Rejection Sampling</h4><p>为了从$p(z) = \frac{1}{Z_p}\tilde{p}(z)$中采出样本出来，通常$\tilde{p}(z)$是很好计算的，但是分母$Z_p$难以计算。我们提出一个分布$q(z)$，以及一个常数，其中满足$kq(z) \ge \tilde{p}(z)$<br><img src="/images/rejection_sampling.png" alt="Rejection Sampling"><br>然后从$z_0 \sim q(z)$，所以接受率为<br>$$p(acc) = \int{\bar{p}(z)/kq(z)}q(z)dz = \frac{1}{k}\int\bar{p}(z)dz$$</p>
+<h4 id="Adaptive-rejection-sampling"><a href="#Adaptive-rejection-sampling" class="headerlink" title="Adaptive rejection sampling"></a>Adaptive rejection sampling</h4><p><img src="/images/adaptive_rejection.png" alt="Adaptive Rejection Sampling"><br>通常来说决定k是比较困难的一件事情，但是对于log凹的函数来说会比较的简单。<br>首先选取几个初始的点，算一下梯度，然后构造一些切线。因为在对数区是切线，所以对应的分布为<br>$$q(z) = k_i\lambda_i \exp(-\lambda_i(z - z_{i-1})) \quad z_{i - 1} &lt; z \le z_{i}$$</p>
+<p>然后按照正常的rejection sampling去做，如果当前点被接受了，不做任何修改。<br>如果当前点被拒绝了，就从这个点重新构造一条切线出来。<br>但是这个方法通常在高维空间有问题。比如说两个高斯$\sigma_p^2I$与$\sigma_q^2I$,对于D维来说，$k=(\sigma_q/\sigma_p)^D$，如果$\sigma_q$只高出0.01，那么最后接受率大概为$1/200000$</p>
+<h4 id="Importance-sampling"><a href="#Importance-sampling" class="headerlink" title="Importance sampling"></a>Importance sampling</h4><p>前面的几种方法都是从分布中采出样本出来，现在我们要求一个期望。$E[f] = \frac{1}{L}\sum p(z^{l})f(z^{l})$。我们采用如下的形式<br>$$E[f] = \int f(z)p(z)dz = \int f(z) \frac{p(z)}{q(z)}q(z) = \frac{1}{L}\sum \frac{p(z^{(l)})}{q(z^{(l)})}f(z^{(l)})$$</p>
+<p>通常来说$p(z)$无法计算，所以通常的情况是$p(z) = \bar{p}(z)/Z_p$<br>那么上式就变为</p>
+<p>$$E[f] = \int f(z)p(z)dz = \int f(z) \frac{p(z)}{q(z)}q(z) = \frac{Z_q}{Z_p}\frac{1}{L}\sum \bar{r}_lf(z^{(l)})$$</p>
+<p>$$\frac{Z_p}{Z_q} = \frac{1}{Z_q}\int \bar{p}(z)dz = \int \frac{\bar{p}(z)}{\bar{q}(z)}q(z)dz = \frac{1}{L}\sum \bar{r}_l$$<br>所以有$E[f] = w_l f(z^{(l)})$<br>其中$$w_l = \frac{\bar{r}_l}{\sum_m \bar{r}_m} = \frac{\bar{p}(z^{(l)})/q(z^{l})}{\sum_m \bar{p}(z^{(m)})/q(z^{(m)})}$$</p>
+<h4 id="Sampling-Importance-resampling"><a href="#Sampling-Importance-resampling" class="headerlink" title="Sampling-Importance-resampling"></a>Sampling-Importance-resampling</h4><p>通常对于一般的$p(z)$来说，没有办法决定合适的k值，所以提出这种方法。<br>首先从$q(z)$里面采出$L$个样本，然后算出权重$w_1,\cdots,w_L$，然后再根据权重采出$L$个样本出来。这样可以保证采出的$L$个样本是近似服从于$p(z)$的。<br>如果$L\rightarrow \infty$，可以证明就是$p(z)$</p>
+<p>首先概率分布函数为$$p(z\le a) = \sum_{l:z^{l} \le a}w_l =\frac{\sum_l I(z^{(l)} \le a)\bar{p}(z^{(l)})/q(z^{(l)})}{\sum_l \bar{p}(z^{(l)})/q(z^{(l)})}$$<br>当$L \rightarrow \infty$，替换和为积分，得到<br>$$p(z\le a) = \frac{\int I(z\le a){\bar{p}(z)/q(z)}q(z)dz}{\int {\bar{p}(z)/q(z)}q(z)dz} = \int I(z \le a)p(z)dz$$</p>
+<p>当$q(z)$和$p(z)$越接近，得到的样本就越好，当$q(z)=p(z)$的时候，可以得到每个权重都是$\frac{1}{L}$</p>
+<h4 id="MCMC-and-Gibbs"><a href="#MCMC-and-Gibbs" class="headerlink" title="MCMC and Gibbs"></a>MCMC and Gibbs</h4><p>这篇Blog写的很不错<a href="http://www.52nlp.cn/lda-math-mcmc-%E5%92%8C-gibbs-sampling1" target="_blank" rel="external">MCMC and Gibbs</a></p>
+
+      </div>
+      <footer class="article-footer">
+        <a data-url="http://yoursite.com/2016/12/20/sampling-method/" data-id="cj2cx0u7b000e3cw89kndrist" class="article-share-link"><i class="fa fa-share"></i>分享到</a>
+        
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Sampling/">Sampling</a></li></ul>
+
+      </footer>
+    </div>
+  </article>
+  
+  
+
+            </div>
+          </section>
+          <aside id="sidebar">
+  <a class="sidebar-toggle" title="Expand Sidebar"><i class="toggle icon"></i></a>
+  <div class="sidebar-top">
+    <p>关注我 :</p>
+    <ul class="social-links">
+      
+        <li><a class="social-tooltip" title="twitter" href="/" target="_blank"><i class="icon fa fa-twitter"></i></a></li>
+      
+        <li><a class="social-tooltip" title="facebook" href="/" target="_blank"><i class="icon fa fa-facebook"></i></a></li>
+      
+        <li><a class="social-tooltip" title="github" href="https://github.com/xcszbdnl" target="_blank"><i class="icon fa fa-github"></i></a></li>
+      
+        <li><a class="social-tooltip" title="weibo" href="/" target="_blank"><i class="icon fa fa-weibo"></i></a></li>
+      
+    </ul>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2017/03/07/svm/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <p class="article-nav-title">
+        
+          svm
+        
+      </p>
+      <i class="icon fa fa-chevron-right" id="icon-chevron-right"></i>
+    </a>
+  
+  
+    <a href="/2016/12/20/decision-tree/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">上一篇</strong>
+      <p class="article-nav-title">决策树</p>
+      <i class="icon fa fa-chevron-left" id="icon-chevron-left"></i>
+    </a>
+  
+</nav>
+
+  
+  <div class="widgets-container">
+    
+      
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul id="recent-post" class="">
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2017/05/06/adaboost/" class="thumbnail">
+  
+    <span style="background-image:url(/images/adaboost_decision_boundary.png
+)" alt="Adaboost" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2017/05/06/adaboost/" class="title">Adaboost</a></p>
+              <p class="item-date"><time datetime="2017-05-06T03:25:23.000Z" itemprop="datePublished">2017-05-06</time></p>
+            </div>
+          </li>
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2017/03/07/svm/" class="thumbnail">
+  
+    <span style="background-image:url(/images/svm_1.png
+)" alt="svm" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2017/03/07/svm/" class="title">svm</a></p>
+              <p class="item-date"><time datetime="2017-03-07T14:51:33.000Z" itemprop="datePublished">2017-03-07</time></p>
+            </div>
+          </li>
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2016/12/20/sampling-method/" class="thumbnail">
+  
+    <span style="background-image:url(/images/rejection_sampling.png
+)" alt="采样方法" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2016/12/20/sampling-method/" class="title">采样方法</a></p>
+              <p class="item-date"><time datetime="2016-12-20T13:31:55.000Z" itemprop="datePublished">2016-12-20</time></p>
+            </div>
+          </li>
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2016/12/20/decision-tree/" class="thumbnail">
+  
+    <span style="background-image:url(/images/decision_tree.png
+)" alt="决策树" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2016/12/20/decision-tree/" class="title">决策树</a></p>
+              <p class="item-date"><time datetime="2016-12-20T13:02:39.000Z" itemprop="datePublished">2016-12-20</time></p>
+            </div>
+          </li>
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2016/10/24/kd-tree/" class="thumbnail">
+  
+    <span style="background-image:url(/images/k_nearest.png
+)" alt="K近邻" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2016/10/24/kd-tree/" class="title">K近邻</a></p>
+              <p class="item-date"><time datetime="2016-10-24T13:40:44.000Z" itemprop="datePublished">2016-10-24</time></p>
+            </div>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget-wrap widget-list">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/技术/">技术</a><span class="category-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap widget-list">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/03/">三月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/10/">十月 2015</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap widget-list">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cluster/">Cluster</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/DeepLearning/">DeepLearning</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MachineLearning/">MachineLearning</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Sampling/">Sampling</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Sparsity/">Sparsity</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap widget-float">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Cluster/" style="font-size: 10px;">Cluster</a> <a href="/tags/DeepLearning/" style="font-size: 15px;">DeepLearning</a> <a href="/tags/MachineLearning/" style="font-size: 20px;">MachineLearning</a> <a href="/tags/Sampling/" style="font-size: 10px;">Sampling</a> <a href="/tags/Sparsity/" style="font-size: 10px;">Sparsity</a>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap widget-list">
+    <h3 class="widget-title">链接</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="http://hexo.io">Hexo</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+
+    
+  </div>
+</aside>
+        </div>
+      </div>
+    </div>
+    <footer id="footer">
+  
+  <div class="container">
+    <div class="container-inner">
+      <a id="back-to-top" href="javascript:;"><i class="icon fa fa-angle-up"></i></a>
+      <div class="credit">
+        <h1 class="logo-wrap">
+          <a href="/" class="logo"></a>
+        </h1>
+        <p>&copy; 2017 ChangshengXiang</p>
+        <p>Powered by <a href="//hexo.io/" target="_blank">Hexo</a>. Theme by <a href="//github.com/ppoffice" target="_blank">PPOffice</a></p>
+      </div>
+    </div>
+  </div>
+</footer>
+    
+
+
+  <script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
+
+
+
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+  <script src="/scrollLoading/jquery.scrollLoading.js"></script>
+  <script src="/scrollLoading/main.js"></script>
+
+
+
+
+<script src="/js/html-patch.js"></script>
+<script src="/js/script.js"></script>
+
+  </div><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({"tex2jax":{"inlineMath":[["$","$"],["\\(","\\)"]],"skipTags":["script","noscript","style","textarea","pre","code"],"processEscapes":true},"TeX":{"equationNumbers":{"autoNumber":"AMS"}}});
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
+</body>
+</html>

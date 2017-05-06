@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="utf-8">
+  
+  <title>EMAlgorithm | 研读小屋</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="EM算法具体例子为Gaussian Mixture Model,由k个component组成。$$P(z_k = 1) = \pi_k, \sum_k\pi_k = 1, 0 \le \pi_k \le 1$$$$P(x|z) = \prod_k\mathcal{N}(x|\mu_k,\Sigma_k)^{z_k}$$$$P(x) = \sum_zP(z)P(x|z) = \sum_k\pi_k\">
+<meta name="keywords" content="Cluster,MachineLearning">
+<meta property="og:type" content="article">
+<meta property="og:title" content="EMAlgorithm">
+<meta property="og:url" content="http://yoursite.com/2016/03/25/EMAlgorithm/index.html">
+<meta property="og:site_name" content="研读小屋">
+<meta property="og:description" content="EM算法具体例子为Gaussian Mixture Model,由k个component组成。$$P(z_k = 1) = \pi_k, \sum_k\pi_k = 1, 0 \le \pi_k \le 1$$$$P(x|z) = \prod_k\mathcal{N}(x|\mu_k,\Sigma_k)^{z_k}$$$$P(x) = \sum_zP(z)P(x|z) = \sum_k\pi_k\">
+<meta property="og:image" content="http://yoursite.com/images/em_1.png">
+<meta property="og:image" content="http://yoursite.com/images/em_2.png">
+<meta property="og:image" content="http://yoursite.com/images/em_3.png">
+<meta property="og:updated_time" content="2017-05-06T06:52:22.385Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="EMAlgorithm">
+<meta name="twitter:description" content="EM算法具体例子为Gaussian Mixture Model,由k个component组成。$$P(z_k = 1) = \pi_k, \sum_k\pi_k = 1, 0 \le \pi_k \le 1$$$$P(x|z) = \prod_k\mathcal{N}(x|\mu_k,\Sigma_k)^{z_k}$$$$P(x) = \sum_zP(z)P(x|z) = \sum_k\pi_k\">
+<meta name="twitter:image" content="http://yoursite.com/images/em_1.png">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <link rel="stylesheet" href="/css/style.css">
+  
+    <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  
+  
+    <link rel="stylesheet" href="/scrollLoading/style.css">
+  
+  
+
+
+  
+
+  
+    <link href='//fonts.useso.com/css?family=Titillium+Web:300,400,600' rel='stylesheet' type='text/css'>
+    <link href="//fonts.useso.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css"><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+</head>
+
+<body>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div id="wrap">
+    <header id="header">
+  <div id="header-outer" class="outer">
+    <div class="container">
+      <div class="container-inner">
+        <div id="header-title">
+          <h1 class="logo-wrap">
+            <a href="/" class="logo"></a>
+          </h1>
+          
+            <h2 class="subtitle-wrap">
+              <p class="subtitle">君子食无求饱，居无求安，敏于事而慎于言</p>
+            </h2>
+          
+        </div>
+        <div id="header-inner" class="nav-container">
+          <a id="main-nav-toggle" class="nav-icon fa fa-bars"></a>
+          <div class="nav-container-inner">
+            <ul id="main-nav">
+              
+                <li class="main-nav-list-item" ><a class="main-nav-list-link" href="/">主页</a></li>
+              
+                    <ul class="main-nav-list"><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/技术/">技术</a></li></ul>
+                  
+                <li class="main-nav-list-item" ><a class="main-nav-list-link" href="/2015/10/25/about">关于</a></li>
+              
+            </ul>
+            <nav id="sub-nav">
+              <div id="search-form-wrap">
+                
+                  <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="搜索"><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+                
+              </div>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+    <div class="container">
+      <div class="main-body container-inner">
+        <div class="main-body-inner">
+          <section id="main">
+            <div class="main-body-header">
+
+              <h1 class="header"><a class="page-title-link" href="/categories/技术/">技术</a></h1>
+            </div>
+            <div class="main-body-content">
+              
+  <article id="post-EMAlgorithm" class="article article-single article-type-post" itemscope itemprop="blogPost">
+    <div class="article-inner">
+      <!--  -->
+      
+        <header class="article-header">
+          
+  
+    <h1 class="article-title" itemprop="name">
+      EMAlgorithm
+    </h1>
+  
+
+        </header>
+      
+      <p class="article-byline">
+        <a href="/2016/03/25/EMAlgorithm/" class="article-date">
+  <time datetime="2016-03-25T08:38:37.000Z" itemprop="datePublished">2016-03-25</time>
+</a>
+      </p>
+      <div class="article-entry" itemprop="articleBody">
+        <p>EM算法<br>具体例子为Gaussian Mixture Model,由k个component组成。<br>$$P(z_k = 1) = \pi_k, \sum_k\pi_k = 1, 0 \le \pi_k \le 1$$<br>$$P(x|z) = \prod_k\mathcal{N}(x|\mu_k,\Sigma_k)^{z_k}$$<br>$$P(x) = \sum_zP(z)P(x|z) = \sum_k\pi_k\mathcal{N}(x|\mu_k,\Sigma_k)$$</p>
+<p>高斯混合模型有两种求法，一种是拿最大似然的形式求导，另外一种就是用隐含变量的形式来看待。</p>
+<p>######直接拿似然求导<br>拿似然求导。<br>先写出似然函数$\ln P(X) = \sum_n\ln(\sum_k\pi_k\mathcal{N}(x_n,\mu_k,\Sigma_k))$，注意到其中的约束条件为$\sum_k\pi_k = 1$<br>首先注意到$$\mathcal{N}(x_n|\mu_k,\Sigma_k) = \frac{1}{(2\pi)^{\frac{d}{2}}}\frac{1}{|\Sigma_k|^{\frac{1}{2}}}\exp (-\frac{1}{2}(x_n-\mu_k)^T\Sigma^{-1}(x_n-\mu_k))$$<br>利用$\frac{\partial X^TAX}{\partial X} = A^TX + AX$</p>
+<p>对$\mu_k$求导，得到<br>$$\frac{\partial \ln P(x)}{\partial \mu_k} = \sum_n\frac{\pi_k\mathcal{N}(x_n|\mu_k,\Sigma_k)}{\sum_j\pi_j\mathcal{N}(x_n|\mu_j,\Sigma_j)}\Sigma^{-1}(x_n-\mu_k)$$<br>令梯度为0，并令$$r(z_{nk}) = \frac{\pi_k\mathcal{N}(x_n|\mu_k,\Sigma_k)}{\sum_j\pi_j\mathcal{N}(x_n|\mu_j,\Sigma_j)} $$得到$$\mu_k = \frac{1}{N_k}\sum_nr(z_{nk})x_n$$</p>
+<p>$$N_k = \sum_nr(z_{nk})$$</p>
+<p>最为复杂的是对$\Sigma_k$进行求导，我们看$Gaussian$分布对$\Sigma_k$求导的结果。$Gaussian$对数概率密度函数为<br>$$\ln L = \ln \mathcal{N}(x|\mu,\Sigma) -\frac{d}{2}\ln 2\pi - \frac{1}{2}\ln|\Sigma| -\frac{1}{2}(x - \mu)^T\Sigma^{-1}(x - \mu)$$</p>
+<p>那么前面一项$\ln |\Sigma|$对$\Sigma$求导得到<br>$$\frac{\partial -\frac{1}{2}\ln |\Sigma|}{\partial \Sigma} = -\frac{1}{2}\Sigma^{-1}$$</p>
+<p>后面一项$$J = -\frac{1}{2}(x - \mu)^T\Sigma^{-1}(x - \mu) = Tr(\Sigma^{-1}S)$$<br>其中$$S = (x-\mu)(x-\mu)^T$$<br>$$\frac{\partial J}{\partial \Sigma_{ij}} = \frac{\partial Tr(\Sigma^{-1}S)}{\Sigma_{ij}} = -\frac{1}{2}Tr(\frac{\partial \Sigma}{\Sigma_{ij}}S) = -\frac{1}{2}Tr(-\Sigma^{-1}\frac{\partial \Sigma}{\partial \Sigma_{ij}}\Sigma^{-1}S) = \frac{1}{2}\Sigma^{-1}S\Sigma^{-1}$$</p>
+<p> 所以得到对$\Sigma$求导结果为$\frac{\partial L}{\partial \Sigma} = -\frac{1}{2}\Sigma^{-1} + \frac{1}{2}\Sigma^{-1}S\Sigma^{-1}$<br> 令导数为0，得到$\Sigma = S$</p>
+<p> 所以在混合高斯中对$\Sigma_k$进行求导，依据上面的求导，稍微有点不同的是前面是对数似然求导，而现在不是对数求导，其实也一样，只要利用$\frac{\partial L}{\partial x} = \frac{\partial e^{\ln L}}{\partial x}$得到即可</p>
+<p> 所以得到<br> $$\Sigma_k = \frac{1}{N_k}\sum_{n}r(z_{nk})(x_n - \mu_k)(x_n-\mu_k)^T$$</p>
+<p>对$\pi_k$求导，并引入拉格朗日乘子，得到$$\frac{\partial \ln P(x)}{\partial \pi_k} = \sum_n\frac{\mathcal{N}(x_n|\mu_k,\Sigma_k)}{\sum_j\pi_j\mathcal{N}(x_n|\mu_j,\Sigma_j)} + \lambda$$<br>令梯度为0,并两边同乘$\pi_k$，然后对k进行求和，得到$\lambda = N$,<br>所以<br>$$\pi_k = \frac{N_k}{N}$$<br>因为每个变量都是相互依赖的，所以该式没有解析解。所以对高斯混合模型来说分为两步。</p>
+<ol>
+<li>E步，求出$r(z_{nk})$</li>
+<li>M步，依据上面推导出来的式子对$\mu,\Sigma,\pi$等参数进行更新。</li>
+</ol>
+<p>######以隐含变量的角度来看待<br>EM是一种通用的方法，来对含有隐藏变量的分布来求似然。<br>首先要写出完全概率，也就是$P(x,z)$<br>在GMM中，<br>$$P(x,z) = \prod_n\prod_k(\pi_k\mathcal{N}(x_n|\mu_k,\Sigma_k))^{z_{nk}}$$</p>
+<p>$$\ln P(x,z) = \sum_n\sum_kz_{nk}(\ln \pi_k + \ln \mathcal{N}(x_n|\mu_k,\Sigma_k))$$</p>
+<p>关于z的信息，只有后验分布$P(z|x)$<br>直接最大化似然$P(x,z)$非常直接。但是我们的目标不是最大化似然联合分布。所以我们考虑在$P(z|x)$分布下的后验期望，也就是$Q$函数。<br>$$Q(\theta,\theta^{old}) = \sum_zP(z|x,\theta^{old})\ln P(x,z|\theta)$$</p>
+<p>接下来最大化$Q$函数即可。<br>根据贝叶斯公式<br>$$P(z|x) \propto \prod_n\prod_k(\pi_k\mathcal{N}(x_n|\mu_k,\Sigma_k)^{z_{nk}}$$</p>
+<p>根据上式，$P(z|x)$是可以分解的独立的。<br>所以$$E[z_{nk}] = \frac{\sum_{z_k}z_{nk}(\pi_k\mathcal{N}(x_n|\mu_k,\Sigma_k))^{z_{nk}}}{\sum_{z_{nj}}z_{nj}(\pi_j\mathcal{N}(x_n|\mu_j,\Sigma_j))^{z_{nj}}}$$</p>
+<p>$$=\frac{\pi_k\mathcal{N}(x_n|\mu_k,\Sigma_k)}{\sum_j\pi_j\mathcal{N}(x_n|\mu_j,\Sigma_j)} = r(z_{nk})$$</p>
+<p>所以<br>$$E_Z[\ln P(x,z)] = \sum_n\sum_kr(z_{nk})(\ln \pi_k + \ln \mathcal{N}(x_n|\mu_k,\Sigma_k))$$</p>
+<p>同样对$\pi_k$求导，并引入拉格朗日乘子，得到<br>$$\pi_k = \frac{1}{N}\sum_nr(z_{nk})$$</p>
+<p>同理对$\mu_k,\Sigma_k$求导也得到和上述式一样</p>
+<p>EM的证明：<br>$$\ln P(X|\theta) = L(q,\theta) + KL(q || p)$$</p>
+<p>$$L(q,\theta) = \sum_zQ(z)\ln \frac{P(x,z|\theta)}{Q(z)}$$</p>
+<p>$$KL(q||p) = \sum_z-Q(z)\ln \frac{P(z|x,\theta)}{Q(z)}$$<br>在E步中，使用$Q(z) = P(z|x,\theta)$,然后KL消失，此时$\ln P(x|\theta) = L(q,\theta)$<br>M步极大化该函数，提高了似然值。<br>所以似然值是不断增加的。</p>
+<p>实现代码：<a href="https://github.com/xcszbdnl/MachineLearning/blob/master/PCA/pca.py" target="_blank" rel="external">EM</a></p>
+<p>注意在实现的时候，初始化参数很重要，如果一开始的$\mu$随机初始化的化，结果会比较差，即使迭代步数够多。比如说这是一开始产生的点：<br><img src="/images/em_1.png" alt="generate"></p>
+<p>然后随机初始化最后得到的结果：<br><img src="/images/em_2.png" alt="random"></p>
+<p>如果初始化初始在各自的中心的结果：<br><img src="/images/em_3.png" alt="center_init"></p>
+<p>所以有在EM之前可以做一下KMeans.</p>
+<h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference:"></a>Reference:</h2><p>PRML Chapter 9<br><a href="http://scikit-learn.org/stable/auto\_examples/mixture/plot\_gmm\_pdf.html#example-mixture-plot-gmm-pdf-py" target="_blank" rel="external">scikitlearn</a></p>
+
+      </div>
+      <footer class="article-footer">
+        <a data-url="http://yoursite.com/2016/03/25/EMAlgorithm/" data-id="cj2cx0u5y00003cw8s5hu0gkc" class="article-share-link"><i class="fa fa-share"></i>分享到</a>
+        
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Cluster/">Cluster</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MachineLearning/">MachineLearning</a></li></ul>
+
+      </footer>
+    </div>
+  </article>
+  
+  
+
+            </div>
+          </section>
+          <aside id="sidebar">
+  <a class="sidebar-toggle" title="Expand Sidebar"><i class="toggle icon"></i></a>
+  <div class="sidebar-top">
+    <p>关注我 :</p>
+    <ul class="social-links">
+      
+        <li><a class="social-tooltip" title="twitter" href="/" target="_blank"><i class="icon fa fa-twitter"></i></a></li>
+      
+        <li><a class="social-tooltip" title="facebook" href="/" target="_blank"><i class="icon fa fa-facebook"></i></a></li>
+      
+        <li><a class="social-tooltip" title="github" href="https://github.com/xcszbdnl" target="_blank"><i class="icon fa fa-github"></i></a></li>
+      
+        <li><a class="social-tooltip" title="weibo" href="/" target="_blank"><i class="icon fa fa-weibo"></i></a></li>
+      
+    </ul>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2016/07/12/bp-detail/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <p class="article-nav-title">
+        
+          神经网络求导细节
+        
+      </p>
+      <i class="icon fa fa-chevron-right" id="icon-chevron-right"></i>
+    </a>
+  
+  
+    <a href="/2015/10/25/about/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">上一篇</strong>
+      <p class="article-nav-title">about</p>
+      <i class="icon fa fa-chevron-left" id="icon-chevron-left"></i>
+    </a>
+  
+</nav>
+
+  
+  <div class="widgets-container">
+    
+      
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul id="recent-post" class="">
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2017/05/06/adaboost/" class="thumbnail">
+  
+    <span style="background-image:url(/images/adaboost_decision_boundary.png
+)" alt="Adaboost" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2017/05/06/adaboost/" class="title">Adaboost</a></p>
+              <p class="item-date"><time datetime="2017-05-06T03:25:23.000Z" itemprop="datePublished">2017-05-06</time></p>
+            </div>
+          </li>
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2017/03/07/svm/" class="thumbnail">
+  
+    <span style="background-image:url(/images/svm_1.png
+)" alt="svm" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2017/03/07/svm/" class="title">svm</a></p>
+              <p class="item-date"><time datetime="2017-03-07T14:51:33.000Z" itemprop="datePublished">2017-03-07</time></p>
+            </div>
+          </li>
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2016/12/20/sampling-method/" class="thumbnail">
+  
+    <span style="background-image:url(/images/rejection_sampling.png
+)" alt="采样方法" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2016/12/20/sampling-method/" class="title">采样方法</a></p>
+              <p class="item-date"><time datetime="2016-12-20T13:31:55.000Z" itemprop="datePublished">2016-12-20</time></p>
+            </div>
+          </li>
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2016/12/20/decision-tree/" class="thumbnail">
+  
+    <span style="background-image:url(/images/decision_tree.png
+)" alt="决策树" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2016/12/20/decision-tree/" class="title">决策树</a></p>
+              <p class="item-date"><time datetime="2016-12-20T13:02:39.000Z" itemprop="datePublished">2016-12-20</time></p>
+            </div>
+          </li>
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2016/10/24/kd-tree/" class="thumbnail">
+  
+    <span style="background-image:url(/images/k_nearest.png
+)" alt="K近邻" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2016/10/24/kd-tree/" class="title">K近邻</a></p>
+              <p class="item-date"><time datetime="2016-10-24T13:40:44.000Z" itemprop="datePublished">2016-10-24</time></p>
+            </div>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget-wrap widget-list">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/技术/">技术</a><span class="category-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap widget-list">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/03/">三月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/10/">十月 2015</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap widget-list">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cluster/">Cluster</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/DeepLearning/">DeepLearning</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MachineLearning/">MachineLearning</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Sampling/">Sampling</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Sparsity/">Sparsity</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap widget-float">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Cluster/" style="font-size: 10px;">Cluster</a> <a href="/tags/DeepLearning/" style="font-size: 15px;">DeepLearning</a> <a href="/tags/MachineLearning/" style="font-size: 20px;">MachineLearning</a> <a href="/tags/Sampling/" style="font-size: 10px;">Sampling</a> <a href="/tags/Sparsity/" style="font-size: 10px;">Sparsity</a>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap widget-list">
+    <h3 class="widget-title">链接</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="http://hexo.io">Hexo</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+
+    
+  </div>
+</aside>
+        </div>
+      </div>
+    </div>
+    <footer id="footer">
+  
+  <div class="container">
+    <div class="container-inner">
+      <a id="back-to-top" href="javascript:;"><i class="icon fa fa-angle-up"></i></a>
+      <div class="credit">
+        <h1 class="logo-wrap">
+          <a href="/" class="logo"></a>
+        </h1>
+        <p>&copy; 2017 ChangshengXiang</p>
+        <p>Powered by <a href="//hexo.io/" target="_blank">Hexo</a>. Theme by <a href="//github.com/ppoffice" target="_blank">PPOffice</a></p>
+      </div>
+    </div>
+  </div>
+</footer>
+    
+
+
+  <script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
+
+
+
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+  <script src="/scrollLoading/jquery.scrollLoading.js"></script>
+  <script src="/scrollLoading/main.js"></script>
+
+
+
+
+<script src="/js/html-patch.js"></script>
+<script src="/js/script.js"></script>
+
+  </div><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({"tex2jax":{"inlineMath":[["$","$"],["\\(","\\)"]],"skipTags":["script","noscript","style","textarea","pre","code"],"processEscapes":true},"TeX":{"equationNumbers":{"autoNumber":"AMS"}}});
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
+</body>
+</html>

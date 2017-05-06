@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="utf-8">
+  
+  <title>Gaussian Process | 研读小屋</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="高斯过程对于基本的线性回归，我们会假设$f(x)$的一个形式，比如说$f(x) = mx + c$或者$f(x) = ax^2 + bx + c$等等，然而高斯过程不直接假设函数的形式，而是让数据自己说话，对函数的分布进行推断。即后验$p(f|D)$，但是对函数后验$p(f|D)$分布进行推断比较困难，我们对这些函数在$x_1, x_2, \cdots, x_n$上的值进行推断。高斯过程即假设$p">
+<meta name="keywords" content="MachineLearning">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Gaussian Process">
+<meta property="og:url" content="http://yoursite.com/2016/09/04/gaussian-process/index.html">
+<meta property="og:site_name" content="研读小屋">
+<meta property="og:description" content="高斯过程对于基本的线性回归，我们会假设$f(x)$的一个形式，比如说$f(x) = mx + c$或者$f(x) = ax^2 + bx + c$等等，然而高斯过程不直接假设函数的形式，而是让数据自己说话，对函数的分布进行推断。即后验$p(f|D)$，但是对函数后验$p(f|D)$分布进行推断比较困难，我们对这些函数在$x_1, x_2, \cdots, x_n$上的值进行推断。高斯过程即假设$p">
+<meta property="og:image" content="http://yoursite.com/images/gaussian_process_1.png">
+<meta property="og:updated_time" content="2017-05-06T06:52:22.401Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Gaussian Process">
+<meta name="twitter:description" content="高斯过程对于基本的线性回归，我们会假设$f(x)$的一个形式，比如说$f(x) = mx + c$或者$f(x) = ax^2 + bx + c$等等，然而高斯过程不直接假设函数的形式，而是让数据自己说话，对函数的分布进行推断。即后验$p(f|D)$，但是对函数后验$p(f|D)$分布进行推断比较困难，我们对这些函数在$x_1, x_2, \cdots, x_n$上的值进行推断。高斯过程即假设$p">
+<meta name="twitter:image" content="http://yoursite.com/images/gaussian_process_1.png">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+
+  <link rel="stylesheet" href="/css/style.css">
+  
+    <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  
+  
+    <link rel="stylesheet" href="/scrollLoading/style.css">
+  
+  
+
+
+  
+
+  
+    <link href='//fonts.useso.com/css?family=Titillium+Web:300,400,600' rel='stylesheet' type='text/css'>
+    <link href="//fonts.useso.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css"><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+</head>
+
+<body>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div id="wrap">
+    <header id="header">
+  <div id="header-outer" class="outer">
+    <div class="container">
+      <div class="container-inner">
+        <div id="header-title">
+          <h1 class="logo-wrap">
+            <a href="/" class="logo"></a>
+          </h1>
+          
+            <h2 class="subtitle-wrap">
+              <p class="subtitle">君子食无求饱，居无求安，敏于事而慎于言</p>
+            </h2>
+          
+        </div>
+        <div id="header-inner" class="nav-container">
+          <a id="main-nav-toggle" class="nav-icon fa fa-bars"></a>
+          <div class="nav-container-inner">
+            <ul id="main-nav">
+              
+                <li class="main-nav-list-item" ><a class="main-nav-list-link" href="/">主页</a></li>
+              
+                    <ul class="main-nav-list"><li class="main-nav-list-item"><a class="main-nav-list-link" href="/categories/技术/">技术</a></li></ul>
+                  
+                <li class="main-nav-list-item" ><a class="main-nav-list-link" href="/2015/10/25/about">关于</a></li>
+              
+            </ul>
+            <nav id="sub-nav">
+              <div id="search-form-wrap">
+                
+                  <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="搜索"><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+                
+              </div>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+    <div class="container">
+      <div class="main-body container-inner">
+        <div class="main-body-inner">
+          <section id="main">
+            <div class="main-body-header">
+
+              <h1 class="header"><a class="page-title-link" href="/categories/技术/">技术</a></h1>
+            </div>
+            <div class="main-body-content">
+              
+  <article id="post-gaussian-process" class="article article-single article-type-post" itemscope itemprop="blogPost">
+    <div class="article-inner">
+      <!--  -->
+      
+        <header class="article-header">
+          
+  
+    <h1 class="article-title" itemprop="name">
+      Gaussian Process
+    </h1>
+  
+
+        </header>
+      
+      <p class="article-byline">
+        <a href="/2016/09/04/gaussian-process/" class="article-date">
+  <time datetime="2016-09-04T11:33:01.000Z" itemprop="datePublished">2016-09-04</time>
+</a>
+      </p>
+      <div class="article-entry" itemprop="articleBody">
+        <h4 id="高斯过程"><a href="#高斯过程" class="headerlink" title="高斯过程"></a>高斯过程</h4><p>对于基本的线性回归，我们会假设$f(x)$的一个形式，比如说$f(x) = mx + c$或者$f(x) = ax^2 + bx + c$等等，然而高斯过程不直接假设函数的形式，而是让数据自己说话，对函数的分布进行推断。即后验$p(f|D)$，但是对函数后验$p(f|D)$分布进行推断比较困难，我们对这些函数在$x_1, x_2, \cdots, x_n$上的值进行推断。高斯过程即假设$p(f(x_1), f(x_2), \cdots,f(x_n))$是一个多元高斯分布，均值为$\mu(x)$,方差为$\Sigma(x)$,其中$\Sigma_{ij} = k(x_i, x_j)$,$k(x_i, x_j)$是核函数，中心思想是$x_i, x_j$如果相似的话$k(x_i, x_j)$应该达到最大，这样意味着$f(x_i)$与$f(x_j)$高度相关，使得函数变得平滑。通常核函数$k(x_i, x_j)$的选择是<br>$$k(x_i, x_j) = \sigma^2\exp(\frac{(x_i-x_j)^2}{-2l^2})$$</p>
+<p>称作squared exponential kernel</p>
+<p>对于高斯过程来说，通常$\mu(x)$选择都是$0$</p>
+<p>现在假设训练数据为$x,f$,测试集为$x_*, f_*$,$f_*$是我们需要预测的，一开始只知道$x_*$.根据先前的假设<br>$p(f,f_*) \sim \mathcal{N}(x|0,\Sigma)$<br>将$\Sigma$可分为四部分<br>$$\Sigma = \begin{bmatrix}K&amp; K_* \\ K_*&amp; K_{**}\end{bmatrix}$$</p>
+<p>其中K为训练集之间的$k(x_i,x_j), (x_i,x_j \in Train)$, $K_*$为$k(x_i,x_j)(x_i\in Train, x_j \in Test)$，$K_{**}$为$k(x_i,x_j)$<br>根据后面的高斯性质,那么有$p(f_*|f) \sim \mathcal{N}(x|\mu_*,\Sigma_*)$，其中<br>$$\mu_* = K_*K^{-1}f$$<br>$$\Sigma_* = K_{**} - K_*K^{-1}K_*$$</p>
+<p>对于预测的$f_*$，可以认为$f_* = \mu_*$</p>
+<p>对于有添加了高斯噪声的预测，即$t = f + \epsilon$,其中$\epsilon \sim \mathcal{N}(x|0, \beta^{-1}I)$</p>
+<p>那么$p(t|f) \sim \mathcal{N}(x|f,\beta^{-1}I)$,而$p(f)$根据高斯过程的定义有$p(f) \sim \mathcal{N}(x|0,\Sigma)$</p>
+<p>所以有<br>$$p(t) = \int p(t|f)p(f)df$$</p>
+<p>两个都是高斯，根据高斯的性质，有$p(t) \sim \mathcal{N}(x|0, C)$,其中$C_{ij} = \Sigma_{ij} + \beta^{-1}\delta_{ij}$</p>
+<p>其余的后验均值和方差都和没有噪声的类似。</p>
+<p>对于参数的估计$\theta = {\sigma, l}$可以采用最大似然的方式。</p>
+<p>$$\frac{\log p(f|x, \theta)}{\partial \theta_i} = -\frac{1}{2}Tr(\Sigma^{-1}\frac{\partial \Sigma}{\partial \theta_i}) + \frac{1}{2}f^T\Sigma^{-1}\frac{\partial \Sigma}{\partial \theta_i}\Sigma^{-1}f$$</p>
+<h4 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h4><p>实现代码如下：<br><a href="https://github.com/xcszbdnl/MachineLearning/blob/master/GaussianProcess/gaussian_process.py" target="_blank" rel="external">GaussianProcess</a></p>
+<p>效果图：<br><img src="/images/gaussian_process_1.png" alt="GaussianProcess"></p>
+<p>从图中看还是能很好的拟合预测的数据的。</p>
+<h4 id="高斯性质"><a href="#高斯性质" class="headerlink" title="高斯性质"></a>高斯性质</h4><p>两个基本Gaussian性质，对于多元高斯$x \sim N(x|\mu, \Sigma)$,将$x$分为$x_a, x_b$两部分。对于条件高斯$p(x_a|x_b)$，仍然是高斯。<br>证明：<br>可以单看$\exp$部分的$x_a$的部分。因为<br>$$p(x) = \frac{1}{(2\pi)^{\frac{D}{2}}}\frac{1}{|\Sigma|^{\frac{1}{2}}}\exp(-\frac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu))$$</p>
+<p>对于$\exp$里面的二次项$-\frac{1}{2}x^T\Sigma^{-1}x$，以及一次项$x\Sigma^{-1}\mu$ 反应了$x$的均值以及方差<br>所以对于$p(x_a|x_b)$可以单看$x_a$的二次项和一次项即可决定$p(x_a|x_b)$的形式。有二次项一定是高斯分布，因为无论怎样都可以进行配方，配成高斯的形式然后加上归一化因子即可。<br>对于$p(x_a|x_b)$里面$\exp$部分，可以将$x_b$看做固定值，我们首先进行分块，令$x^T = [x_a^T,x_b^T]$, $\Sigma = \begin{bmatrix}\Sigma_{aa}&amp;\Sigma_{ab}\\\Sigma_{ba}&amp;\Sigma_{bb}\end{bmatrix}$,$\Sigma^{-1} = \begin{bmatrix}\Lambda_{aa} &amp; \Lambda_{ab} \ \Lambda_{ba} &amp;\Lambda_{bb}\end{bmatrix}$，注意到$\Sigma_{aa}^{-1}$是不等于$\Lambda_{aa}$的<br>原式$\exp$里面的形式可以化为<br>$$-\frac{1}{2}(x_a-\mu_a)^T\Lambda_{aa}(x_a-\mu_a)-\frac{1}{2}(x_a-\mu_a)^T\Lambda_{ab}(x_b-\mu_b)\\<br>-\frac{1}{2}(x_b-\mu_b)^T\Lambda_{ba}(x_a-\mu_a)-\frac{1}{2}(x_b-\mu_b)^T\Lambda_{bb}(x_b-\mu_b) \quad (1)$$</p>
+<p>把$x_a$有关的二次项和一次项几区出来，我们可以得到二次项为$-\frac{1}{2}x_a^T\Lambda_{aa}x_a$,一次项为$x_a^T(\Lambda_{aa}\mu_a - \Lambda_{ab}(x_b-\mu_b))$，所以得到$$\Sigma_{a|b} = \Lambda_{aa}^{-1}$$<br>$$\mu_{a|b}=\Lambda_{aa}^{-1}(\Lambda_{aa}\mu_a- \Lambda_{ab}(x_b-\mu_b))=\mu_a-\Lambda_{aa}^{-1}\Lambda_{ab}(x_b-\mu_b)<br>$$</p>
+<p>然后根据<br>$$\left( \begin{array}{cc} A &amp; B\\C &amp; D\end{array}\right)^{-1} = \left(\begin{array}{cc}M &amp; -MBD^{-1}\\-D^{-1}CM &amp; D^{-1}+D^{-1}CMBD^{-1}\end{array}\right)  \quad(2)$$</p>
+<p>其中$M = (A-BD^{-1}C)^{-1}$，所以我们得到$\Lambda_{aa}=(\Sigma_{aa}-\Sigma_{ab}\Sigma_{bb}^{-1}\Sigma_{ba})^{-1}$，$\Lambda_{ab}=-(\Sigma_{aa}-\Sigma_{ab}\Sigma_{bb}^{-1}\Sigma_{ba})^{-1}\Sigma_{ab}\Sigma_{bb}^{-1}$</p>
+<p>根据以上，得到<br>$$\mu_{a|b} = \mu_a+\Sigma_{ab}\Sigma_{bb}^{-1}(x_b-\mu_b)$$</p>
+<p>$$\Sigma_{a|b}= \Sigma_{aa}-\Sigma_{ab}\Sigma_{bb}^{-1}\Sigma_{ba}$$</p>
+<p>高斯的边缘分布，也是高斯<br>$p(x_a) = \int p(x_a,x_b)dx_b$，为了将$x_b$积掉，首先在原式中对$x_b$进行配方，提出与$x_b$有关的所有项为<br>$$-\frac{1}{2}x_b^T\Lambda_{bb}x_b + x_b^T(\Lambda_{bb}\mu_b - \Lambda_{ba}(x_a-\mu_a))$$</p>
+<p>将此式进行完全配方，得到<br>$$-\frac{1}{2}(x_b-\Lambda_{bb}^{-1}m)^T\Lambda_{bb}(x_b-\Lambda_{bb}^{-1}m) + \frac{1}{2}m^T\Lambda_{bb}^{-1}m$$</p>
+<p>其中<br>$$m = (\Lambda_{bb}\mu_b -\Lambda_{ba}(x_a-\mu_a))$$</p>
+<p>对$x_b$进行积分，可以根据Gaussian得到为一个常数，并且和$x_a$无关。积分后留下来和$x_a$有关的项为$\frac{1}{2}m^T\Lambda_{bb}^{-1}m$<br>根据$(1)$式，以及留下来的式子得到与$x_a$有关的项为<br>$$\frac{1}{2}(\Lambda_{bb}\mu_b - \Lambda_{ba}(x_a-\mu_a))^T\Lambda_{bb}^{-1}(\Lambda_{bb}\mu_b -\Lambda_{ba}(x_a-\mu_a))\\ -\frac{1}{2}x_a^T\Lambda_{aa}x_a + x_a^T(\Lambda_{ab}\mu_b + \Lambda_{aa}\mu_a) + const$$</p>
+<p>整理一下得到<br>$$-\frac{1}{2}x_a^T(\Lambda_{aa} - \Lambda_{ba}\Lambda_{bb}^{-1}\Lambda_{ba})x_a + x_a^T(\Lambda_{aa} - \Lambda_{ba}\Lambda_{bb}\Lambda_{ab})\mu_a + const$$</p>
+<p>所以$$\Sigma_{a}=(\Lambda_{aa}-\Lambda_{ba}\Lambda_{bb}^{-1}\Lambda_{ba})^{-1}$$</p>
+<p>均值为<br>$$\Sigma_a(\Lambda_{aa}-\Lambda_{ba}\Lambda_{bb}^{-1}\Lambda_{ba})\mu_a =\mu_a$$</p>
+<p>而根据上面的$(2)$式，得到$(\Lambda_{aa}-\Lambda_{ba}\Lambda_{bb}^{-1}\Lambda_{ba}) = \Sigma_{aa}$</p>
+<p>所以$p(a)$边缘分布也为高斯分布$E[a] = \mu_a, cov[a] = \Sigma_{aa}$</p>
+
+      </div>
+      <footer class="article-footer">
+        <a data-url="http://yoursite.com/2016/09/04/gaussian-process/" data-id="cj2cx0u7h000l3cw8pfeoe45j" class="article-share-link"><i class="fa fa-share"></i>分享到</a>
+        
+        
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MachineLearning/">MachineLearning</a></li></ul>
+
+      </footer>
+    </div>
+  </article>
+  
+  
+
+            </div>
+          </section>
+          <aside id="sidebar">
+  <a class="sidebar-toggle" title="Expand Sidebar"><i class="toggle icon"></i></a>
+  <div class="sidebar-top">
+    <p>关注我 :</p>
+    <ul class="social-links">
+      
+        <li><a class="social-tooltip" title="twitter" href="/" target="_blank"><i class="icon fa fa-twitter"></i></a></li>
+      
+        <li><a class="social-tooltip" title="facebook" href="/" target="_blank"><i class="icon fa fa-facebook"></i></a></li>
+      
+        <li><a class="social-tooltip" title="github" href="https://github.com/xcszbdnl" target="_blank"><i class="icon fa fa-github"></i></a></li>
+      
+        <li><a class="social-tooltip" title="weibo" href="/" target="_blank"><i class="icon fa fa-weibo"></i></a></li>
+      
+    </ul>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2016/10/06/elastic-net/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <p class="article-nav-title">
+        
+          ElasticNet
+        
+      </p>
+      <i class="icon fa fa-chevron-right" id="icon-chevron-right"></i>
+    </a>
+  
+  
+    <a href="/2016/08/08/dimension-reduction/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">上一篇</strong>
+      <p class="article-nav-title">数据降维</p>
+      <i class="icon fa fa-chevron-left" id="icon-chevron-left"></i>
+    </a>
+  
+</nav>
+
+  
+  <div class="widgets-container">
+    
+      
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul id="recent-post" class="">
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2017/05/06/adaboost/" class="thumbnail">
+  
+    <span style="background-image:url(/images/adaboost_decision_boundary.png
+)" alt="Adaboost" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2017/05/06/adaboost/" class="title">Adaboost</a></p>
+              <p class="item-date"><time datetime="2017-05-06T03:25:23.000Z" itemprop="datePublished">2017-05-06</time></p>
+            </div>
+          </li>
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2017/03/07/svm/" class="thumbnail">
+  
+    <span style="background-image:url(/images/svm_1.png
+)" alt="svm" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2017/03/07/svm/" class="title">svm</a></p>
+              <p class="item-date"><time datetime="2017-03-07T14:51:33.000Z" itemprop="datePublished">2017-03-07</time></p>
+            </div>
+          </li>
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2016/12/20/sampling-method/" class="thumbnail">
+  
+    <span style="background-image:url(/images/rejection_sampling.png
+)" alt="采样方法" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2016/12/20/sampling-method/" class="title">采样方法</a></p>
+              <p class="item-date"><time datetime="2016-12-20T13:31:55.000Z" itemprop="datePublished">2016-12-20</time></p>
+            </div>
+          </li>
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2016/12/20/decision-tree/" class="thumbnail">
+  
+    <span style="background-image:url(/images/decision_tree.png
+)" alt="决策树" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2016/12/20/decision-tree/" class="title">决策树</a></p>
+              <p class="item-date"><time datetime="2016-12-20T13:02:39.000Z" itemprop="datePublished">2016-12-20</time></p>
+            </div>
+          </li>
+        
+          <li>
+            
+            <div class="item-thumbnail">
+              
+<a href="/2016/10/24/kd-tree/" class="thumbnail">
+  
+    <span style="background-image:url(/images/k_nearest.png
+)" alt="K近邻" class="thumbnail-image"></span>
+  
+</a>
+
+            </div>
+            
+            <div class="item-inner">
+              <p class="item-category"><a class="article-category-link" href="/categories/技术/">技术</a></p>
+              <p class="item-title"><a href="/2016/10/24/kd-tree/" class="title">K近邻</a></p>
+              <p class="item-date"><time datetime="2016-10-24T13:40:44.000Z" itemprop="datePublished">2016-10-24</time></p>
+            </div>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget-wrap widget-list">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/技术/">技术</a><span class="category-list-count">10</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap widget-list">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/05/">五月 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/03/">三月 2017</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/12/">十二月 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/10/">十月 2016</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/09/">九月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/08/">八月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/07/">七月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2016/03/">三月 2016</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2015/10/">十月 2015</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap widget-list">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Cluster/">Cluster</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/DeepLearning/">DeepLearning</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MachineLearning/">MachineLearning</a><span class="tag-list-count">9</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Sampling/">Sampling</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Sparsity/">Sparsity</a><span class="tag-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap widget-float">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Cluster/" style="font-size: 10px;">Cluster</a> <a href="/tags/DeepLearning/" style="font-size: 15px;">DeepLearning</a> <a href="/tags/MachineLearning/" style="font-size: 20px;">MachineLearning</a> <a href="/tags/Sampling/" style="font-size: 10px;">Sampling</a> <a href="/tags/Sparsity/" style="font-size: 10px;">Sparsity</a>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget-wrap widget-list">
+    <h3 class="widget-title">链接</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="http://hexo.io">Hexo</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+
+    
+  </div>
+</aside>
+        </div>
+      </div>
+    </div>
+    <footer id="footer">
+  
+  <div class="container">
+    <div class="container-inner">
+      <a id="back-to-top" href="javascript:;"><i class="icon fa fa-angle-up"></i></a>
+      <div class="credit">
+        <h1 class="logo-wrap">
+          <a href="/" class="logo"></a>
+        </h1>
+        <p>&copy; 2017 ChangshengXiang</p>
+        <p>Powered by <a href="//hexo.io/" target="_blank">Hexo</a>. Theme by <a href="//github.com/ppoffice" target="_blank">PPOffice</a></p>
+      </div>
+    </div>
+  </div>
+</footer>
+    
+
+
+  <script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
+
+
+
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+  <script src="/scrollLoading/jquery.scrollLoading.js"></script>
+  <script src="/scrollLoading/main.js"></script>
+
+
+
+
+<script src="/js/html-patch.js"></script>
+<script src="/js/script.js"></script>
+
+  </div><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({"tex2jax":{"inlineMath":[["$","$"],["\\(","\\)"]],"skipTags":["script","noscript","style","textarea","pre","code"],"processEscapes":true},"TeX":{"equationNumbers":{"autoNumber":"AMS"}}});
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
+</body>
+</html>
